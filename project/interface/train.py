@@ -18,8 +18,12 @@ def render_train_interface(
 
     st.markdown("### Dataset")
     col1, col2 = st.columns(2)
-    points = col2.slider("Number of points", min_value=1, max_value=150, value=50)
-    selected_dataset = col1.selectbox("Select dataset", list(datasets_map.keys()))
+    points = col2.slider(
+        "Number of points", min_value=1, max_value=150, value=50
+    )
+    selected_dataset = col1.selectbox(
+        "Select dataset", list(datasets_map.keys())
+    )
 
     @st.cache
     def get_dataset(selected_dataset, points):
@@ -56,7 +60,10 @@ def render_train_interface(
         st.markdown("### Parameters")
         for n, p in train.model.named_parameters():
             value = st.slider(
-                f"Parameter: {n}", min_value=-10.0, max_value=10.0, value=p.value
+                f"Parameter: {n}",
+                min_value=-10.0,
+                max_value=10.0,
+                value=p.value,
             )
             p.update(value)
 
@@ -126,7 +133,9 @@ def render_train_interface(
 
         st_epoch_image.plotly_chart(plot())
         if hasattr(train, "train"):
-            loss_graph = go.Scatter(mode="lines", x=list(range(len(losses))), y=losses)
+            loss_graph = go.Scatter(
+                mode="lines", x=list(range(len(losses))), y=losses
+            )
             fig = go.Figure(loss_graph)
             fig.update_layout(
                 title="Loss Graph",

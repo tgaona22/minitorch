@@ -42,21 +42,27 @@ class CudaOps(TensorOps):
 
             # Instantiate and run the cuda kernel.
             threadsperblock = THREADS_PER_BLOCK
-            blockspergrid = (out.size + THREADS_PER_BLOCK - 1) // THREADS_PER_BLOCK
+            blockspergrid = (
+                out.size + THREADS_PER_BLOCK - 1
+            ) // THREADS_PER_BLOCK
             f[blockspergrid, threadsperblock](*out.tuple(), out.size, *a.tuple())  # type: ignore
             return out
 
         return ret
 
     @staticmethod
-    def zip(fn: Callable[[float, float], float]) -> Callable[[Tensor, Tensor], Tensor]:
+    def zip(
+        fn: Callable[[float, float], float]
+    ) -> Callable[[Tensor, Tensor], Tensor]:
         f = tensor_zip(cuda.jit(device=True)(fn))
 
         def ret(a: Tensor, b: Tensor) -> Tensor:
             c_shape = shape_broadcast(a.shape, b.shape)
             out = a.zeros(c_shape)
             threadsperblock = THREADS_PER_BLOCK
-            blockspergrid = (out.size + (threadsperblock - 1)) // threadsperblock
+            blockspergrid = (
+                out.size + (threadsperblock - 1)
+            ) // threadsperblock
             f[blockspergrid, threadsperblock](  # type: ignore
                 *out.tuple(), out.size, *a.tuple(), *b.tuple()
             )
@@ -149,20 +155,18 @@ def tensor_map(
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-
         out_index = cuda.local.array(MAX_DIMS, numba.int32)
         in_index = cuda.local.array(MAX_DIMS, numba.int32)
         i = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
         # TODO: Implement for Task 3.3.
-        raise NotImplementedError('Need to implement for Task 3.3')
+        raise NotImplementedError("Need to implement for Task 3.3")
 
     return cuda.jit()(_map)  # type: ignore
 
 
-def tensor_zip(
-    fn: Callable[[float, float], float]
-) -> Callable[
-    [Storage, Shape, Strides, Storage, Shape, Strides, Storage, Shape, Strides], None
+def tensor_zip(fn: Callable[[float, float], float]) -> Callable[
+    [Storage, Shape, Strides, Storage, Shape, Strides, Storage, Shape, Strides],
+    None,
 ]:
     """
     CUDA higher-order tensor zipWith (or map2) function ::
@@ -189,14 +193,13 @@ def tensor_zip(
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
-
         out_index = cuda.local.array(MAX_DIMS, numba.int32)
         a_index = cuda.local.array(MAX_DIMS, numba.int32)
         b_index = cuda.local.array(MAX_DIMS, numba.int32)
         i = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
 
         # TODO: Implement for Task 3.3.
-        raise NotImplementedError('Need to implement for Task 3.3')
+        raise NotImplementedError("Need to implement for Task 3.3")
 
     return cuda.jit()(_zip)  # type: ignore
 
@@ -229,7 +232,7 @@ def _sum_practice(out: Storage, a: Storage, size: int) -> None:
     pos = cuda.threadIdx.x
 
     # TODO: Implement for Task 3.3.
-    raise NotImplementedError('Need to implement for Task 3.3')
+    raise NotImplementedError("Need to implement for Task 3.3")
 
 
 jit_sum_practice = cuda.jit()(_sum_practice)
@@ -279,7 +282,7 @@ def tensor_reduce(
         pos = cuda.threadIdx.x
 
         # TODO: Implement for Task 3.3.
-        raise NotImplementedError('Need to implement for Task 3.3')
+        raise NotImplementedError("Need to implement for Task 3.3")
 
     return cuda.jit()(_reduce)  # type: ignore
 
@@ -316,7 +319,7 @@ def _mm_practice(out: Storage, a: Storage, b: Storage, size: int) -> None:
     """
     BLOCK_DIM = 32
     # TODO: Implement for Task 3.3.
-    raise NotImplementedError('Need to implement for Task 3.3')
+    raise NotImplementedError("Need to implement for Task 3.3")
 
 
 jit_mm_practice = cuda.jit()(_mm_practice)
@@ -386,7 +389,7 @@ def _tensor_matrix_multiply(
     #    b) Copy into shared memory for b matrix
     #    c) Compute the dot produce for position c[i, j]
     # TODO: Implement for Task 3.4.
-    raise NotImplementedError('Need to implement for Task 3.4')
+    raise NotImplementedError("Need to implement for Task 3.4")
 
 
 tensor_matrix_multiply = cuda.jit(_tensor_matrix_multiply)

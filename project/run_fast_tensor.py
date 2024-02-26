@@ -79,8 +79,12 @@ class FastTrain:
 
             for i in range(0, len(X_shuf), BATCH):
                 optim.zero_grad()
-                X = minitorch.tensor(X_shuf[i : i + BATCH], backend=self.backend)
-                y = minitorch.tensor(y_shuf[i : i + BATCH], backend=self.backend)
+                X = minitorch.tensor(
+                    X_shuf[i : i + BATCH], backend=self.backend
+                )
+                y = minitorch.tensor(
+                    y_shuf[i : i + BATCH], backend=self.backend
+                )
                 # Forward
 
                 out = self.model.forward(X).view(y.shape[0])
@@ -109,8 +113,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--PTS", type=int, default=50, help="number of points")
-    parser.add_argument("--HIDDEN", type=int, default=10, help="number of hiddens")
-    parser.add_argument("--RATE", type=float, default=0.05, help="learning rate")
+    parser.add_argument(
+        "--HIDDEN", type=int, default=10, help="number of hiddens"
+    )
+    parser.add_argument(
+        "--RATE", type=float, default=0.05, help="learning rate"
+    )
     parser.add_argument("--BACKEND", default="cpu", help="backend mode")
     parser.add_argument("--DATASET", default="simple", help="dataset")
     parser.add_argument("--PLOT", default=False, help="dataset")
@@ -130,5 +138,6 @@ if __name__ == "__main__":
     RATE = args.RATE
 
     FastTrain(
-        HIDDEN, backend=FastTensorBackend if args.BACKEND != "gpu" else GPUBackend
+        HIDDEN,
+        backend=FastTensorBackend if args.BACKEND != "gpu" else GPUBackend,
     ).train(data, RATE)

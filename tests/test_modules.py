@@ -39,7 +39,8 @@ class ScalarLinear(minitorch.Module):
             for j in range(out_size):
                 self.weights[i].append(
                     self.add_parameter(
-                        f"weight_{i}_{j}", minitorch.Scalar(2 * (random.random() - 0.5))
+                        f"weight_{i}_{j}",
+                        minitorch.Scalar(2 * (random.random() - 0.5)),
                     )
                 )
         for j in range(out_size):

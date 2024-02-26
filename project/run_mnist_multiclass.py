@@ -30,7 +30,8 @@ class Linear(minitorch.Module):
     def forward(self, x):
         batch, in_size = x.shape
         return (
-            x.view(batch, in_size) @ self.weights.value.view(in_size, self.out_size)
+            x.view(batch, in_size)
+            @ self.weights.value.view(in_size, self.out_size)
         ).view(batch, self.out_size) + self.bias.value
 
 
@@ -115,7 +116,12 @@ class ImageTrain:
         return self.model.forward(minitorch.tensor([x], backend=BACKEND))
 
     def train(
-        self, data_train, data_val, learning_rate, max_epochs=500, log_fn=default_log_fn
+        self,
+        data_train,
+        data_val,
+        learning_rate,
+        max_epochs=500,
+        log_fn=default_log_fn,
     ):
         (X_train, y_train) = data_train
         (X_val, y_val) = data_val
@@ -170,7 +176,9 @@ class ImageTrain:
                             X_val[val_example_num : val_example_num + BATCH],
                             backend=BACKEND,
                         )
-                        out = model.forward(x.view(BATCH, 1, H, W)).view(BATCH, C)
+                        out = model.forward(x.view(BATCH, 1, H, W)).view(
+                            BATCH, C
+                        )
                         for i in range(BATCH):
                             m = -1000
                             ind = -1

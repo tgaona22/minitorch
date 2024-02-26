@@ -4,7 +4,13 @@ import streamlit as st
 from project.interface.streamlit_utils import render_function
 from show_tensor import tensor_figure
 
-from minitorch import SimpleBackend, Tensor, index_to_position, operators, to_index
+from minitorch import (
+    SimpleBackend,
+    Tensor,
+    index_to_position,
+    operators,
+    to_index,
+)
 from minitorch.tensor_data import TensorData
 
 
@@ -21,7 +27,9 @@ def st_select_index(tensor_shape, n_cols=3):
 def st_visualize_storage(tensor: Tensor, selected_position: int, max_size=10):
     tensor_size = len(tensor._tensor._storage)
     if tensor_size > max_size:
-        st.warning(f"Showing first {max_size} elements from the tensor storage.")
+        st.warning(
+            f"Showing first {max_size} elements from the tensor storage."
+        )
     x = list(range(min(tensor_size, max_size)))
     y = [0] * len(x)
     data = [
@@ -34,7 +42,8 @@ def st_visualize_storage(tensor: Tensor, selected_position: int, max_size=10):
                 size=50,
                 symbol="square",
                 color=[
-                    "#69BAC9" if x_ == selected_position else "lightgray" for x_ in x
+                    "#69BAC9" if x_ == selected_position else "lightgray"
+                    for x_ in x
                 ],
             ),
             text=tensor._tensor._storage[:max_size],
@@ -46,7 +55,12 @@ def st_visualize_storage(tensor: Tensor, selected_position: int, max_size=10):
     lr_margin = 25 if len(x) >= 9 else 75 if len(x) >= 6 else 175
 
     layout = go.Layout(
-        title={"text": "Tensor Storage", "x": 0.5, "y": 1.0, "xanchor": "center"},
+        title={
+            "text": "Tensor Storage",
+            "x": 0.5,
+            "y": 1.0,
+            "xanchor": "center",
+        },
         font={"family": "Raleway", "size": 20, "color": "black"},
         xaxis={"showgrid": False, "showticklabels": False},
         yaxis={"showgrid": False, "showticklabels": False},
@@ -121,7 +135,10 @@ def st_visualize_tensor(
 def interface_visualize_tensor(tensor: Tensor, hide_function_defs: bool):
     st.write(f"**Tensor strides:** {tensor._tensor.strides}")
     selected_position = st.slider(
-        "Selected position in storage", 0, len(tensor._tensor._storage) - 1, value=0
+        "Selected position in storage",
+        0,
+        len(tensor._tensor._storage) - 1,
+        value=0,
     )
     out_index = [0] * len(tensor.shape)
     to_index(selected_position, tensor.shape, out_index)
@@ -137,7 +154,8 @@ def interface_index_to_position(tensor: Tensor, hide_function_defs: bool):
     col1, col2 = st.columns(2)
     idx = eval(
         col1.text_input(
-            "Multi-dimensional index", value=str([0] * len(tensor._tensor.strides))
+            "Multi-dimensional index",
+            value=str([0] * len(tensor._tensor.strides)),
         )
     )
     tensor_strides = eval(
@@ -169,7 +187,9 @@ def interface_to_index(tensor: Tensor, hide_function_defs: bool):
 
 
 def interface_strides(tensor: Tensor, hide_function_defs: bool):
-    strides = eval(st.text_input("Tensor strides", value=str(tensor._tensor.strides)))
+    strides = eval(
+        st.text_input("Tensor strides", value=str(tensor._tensor.strides))
+    )
 
     st.write("**Try it out:**")
     out_index = st_select_index(tensor.shape)
@@ -187,7 +207,9 @@ def interface_permute(tensor: Tensor, hide_function_defs: bool):
     st.write(f"**Tensor strides:** {tensor._tensor.strides}")
     default_permutation = list(range(len(tensor.shape)))
     default_permutation.reverse()
-    permutation = eval(st.text_input("Tensor permutation", value=default_permutation))
+    permutation = eval(
+        st.text_input("Tensor permutation", value=default_permutation)
+    )
     p_tensor = tensor.permute(*permutation)
     p_tensor_strides = p_tensor._tensor.strides
     st.write(f"**Permuted tensor strides:** {p_tensor_strides}")
@@ -195,7 +217,8 @@ def interface_permute(tensor: Tensor, hide_function_defs: bool):
     st.write("**Try selecting a tensor value by index:**")
     out_index = st_select_index(tensor.shape)
     viz_type = st.selectbox(
-        "Choose tensor visualization", options=["Original tensor", "Permuted tensor"]
+        "Choose tensor visualization",
+        options=["Original tensor", "Permuted tensor"],
     )
     if viz_type == "Original tensor":
         viz_tensor = tensor
@@ -234,12 +257,16 @@ def render_tensor_sandbox(hide_function_defs: bool):
         st.write(tensor_data.reshape(1, -1))
     else:
         tensor_data = st_eval_error_message(
-            st.text_input("Tensor data storage", value=str(list(range(tensor_size)))),
+            st.text_input(
+                "Tensor data storage", value=str(list(range(tensor_size)))
+            ),
             "Tensor data storage must be defined as an in-line list, i.e. [1, 2, 3, 4]",
         )
 
     try:
-        test_tensor = Tensor.make(tensor_data, tensor_shape, backend=SimpleBackend)
+        test_tensor = Tensor.make(
+            tensor_data, tensor_shape, backend=SimpleBackend
+        )
     except AssertionError as e:
         storage_size = len(tensor_data)
         if tensor_size != storage_size:
@@ -258,6 +285,8 @@ def render_tensor_sandbox(hide_function_defs: bool):
         "function: TensorData.permute": interface_permute,
     }
 
-    selected_fn = st.selectbox("Select an interface", options=list(select_fn.keys()))
+    selected_fn = st.selectbox(
+        "Select an interface", options=list(select_fn.keys())
+    )
 
     select_fn[selected_fn](test_tensor, hide_function_defs)

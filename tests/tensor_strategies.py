@@ -60,7 +60,9 @@ def tensor_data(
 
 @composite
 def indices(draw: DrawFn, layout: Tensor) -> UserIndex:
-    return tuple((draw(integers(min_value=0, max_value=s - 1)) for s in layout.shape))
+    return tuple(
+        (draw(integers(min_value=0, max_value=s - 1)) for s in layout.shape)
+    )
 
 
 @composite
@@ -93,7 +95,8 @@ def shaped_tensors(
         data = draw(lists(numbers, min_size=td.size, max_size=td.size))
         values.append(
             minitorch.Tensor(
-                minitorch.TensorData(data, td.shape, td.strides), backend=backend
+                minitorch.TensorData(data, td.shape, td.strides),
+                backend=backend,
             )
         )
     return values
@@ -106,7 +109,6 @@ def matmul_tensors(
         allow_nan=False, min_value=-100, max_value=100
     ),
 ) -> List[Tensor]:
-
     i, j, k = [draw(integers(min_value=1, max_value=10)) for _ in range(3)]
 
     l1 = (i, j)

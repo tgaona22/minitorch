@@ -11,7 +11,9 @@ def make_scatters(graph, model=None, size=50):
     if model is not None:
         colorscale = [[0, "#69bac9"], [1.0, "#ea8484"]]
         z = [
-            model([[j / (size + 1.0), k / (size + 1.0)] for j in range(size + 1)])
+            model(
+                [[j / (size + 1.0), k / (size + 1.0)] for j in range(size + 1)]
+            )
             for k in range(size + 1)
         ]
         scatters.append(
@@ -64,7 +66,9 @@ def animate(self, models, names):
         steps.append(step)
 
     sliders = [
-        dict(active=0, currentvalue={"prefix": "b="}, pad={"t": 50}, steps=steps)
+        dict(
+            active=0, currentvalue={"prefix": "b="}, pad={"t": 50}, steps=steps
+        )
     ]
 
     fig = go.Figure(
@@ -148,7 +152,9 @@ def plot(graph, model=None, name=""):
     plot_out(graph, model, name).show()
 
 
-def plot_function(title, fn, arange=[(i / 10.0) - 5 for i in range(0, 100)], fn2=None):
+def plot_function(
+    title, fn, arange=[(i / 10.0) - 5 for i in range(0, 100)], fn2=None
+):
     ys = [fn(x) for x in arange]
     scatters = []
     scatter = go.Scatter(x=arange, y=ys)

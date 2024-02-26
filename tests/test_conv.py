@@ -56,9 +56,9 @@ def test_conv_channel(input: Tensor, weight: Tensor) -> None:
 
 @pytest.mark.task4_2
 def test_conv2() -> None:
-    t = minitorch.tensor([[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]).view(
-        1, 1, 4, 4
-    )
+    t = minitorch.tensor(
+        [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    ).view(1, 1, 4, 4)
     t.requires_grad_(True)
 
     t2 = minitorch.tensor([[1, 1], [1, 1]]).view(1, 1, 2, 2)

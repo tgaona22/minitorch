@@ -20,8 +20,7 @@ if TYPE_CHECKING:
 
 
 class MapProto(Protocol):
-    def __call__(self, x: Tensor, out: Optional[Tensor] = ..., /) -> Tensor:
-        ...
+    def __call__(self, x: Tensor, out: Optional[Tensor] = ..., /) -> Tensor: ...
 
 
 class TensorOps:
@@ -30,11 +29,15 @@ class TensorOps:
         pass
 
     @staticmethod
-    def cmap(fn: Callable[[float], float]) -> Callable[[Tensor, Tensor], Tensor]:
+    def cmap(
+        fn: Callable[[float], float]
+    ) -> Callable[[Tensor, Tensor], Tensor]:
         pass
 
     @staticmethod
-    def zip(fn: Callable[[float, float], float]) -> Callable[[Tensor, Tensor], Tensor]:
+    def zip(
+        fn: Callable[[float, float], float]
+    ) -> Callable[[Tensor, Tensor], Tensor]:
         pass
 
     @staticmethod
@@ -265,15 +268,14 @@ def tensor_map(
         in_strides: Strides,
     ) -> None:
         # TODO: Implement for Task 2.3.
-        raise NotImplementedError('Need to implement for Task 2.3')
+        raise NotImplementedError("Need to implement for Task 2.3")
 
     return _map
 
 
-def tensor_zip(
-    fn: Callable[[float, float], float]
-) -> Callable[
-    [Storage, Shape, Strides, Storage, Shape, Strides, Storage, Shape, Strides], None
+def tensor_zip(fn: Callable[[float, float], float]) -> Callable[
+    [Storage, Shape, Strides, Storage, Shape, Strides, Storage, Shape, Strides],
+    None,
 ]:
     """
     Low-level implementation of tensor zip between
@@ -310,7 +312,7 @@ def tensor_zip(
         b_strides: Strides,
     ) -> None:
         # TODO: Implement for Task 2.3.
-        raise NotImplementedError('Need to implement for Task 2.3')
+        raise NotImplementedError("Need to implement for Task 2.3")
 
     return _zip
 
@@ -341,7 +343,7 @@ def tensor_reduce(
         reduce_dim: int,
     ) -> None:
         # TODO: Implement for Task 2.3.
-        raise NotImplementedError('Need to implement for Task 2.3')
+        raise NotImplementedError("Need to implement for Task 2.3")
 
     return _reduce
 

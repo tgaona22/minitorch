@@ -2,6 +2,7 @@
 Be sure you have minitorch installed in you Virtual Env.
 >>> pip install -Ue .
 """
+
 import random
 
 import minitorch
@@ -33,7 +34,8 @@ class Linear(minitorch.Module):
             for j in range(out_size):
                 self.weights[i].append(
                     self.add_parameter(
-                        f"weight_{i}_{j}", minitorch.Scalar(2 * (random.random() - 0.5))
+                        f"weight_{i}_{j}",
+                        minitorch.Scalar(2 * (random.random() - 0.5)),
                     )
                 )
         for j in range(out_size):
@@ -64,7 +66,10 @@ class ScalarTrain:
 
     def run_one(self, x):
         return self.model.forward(
-            (minitorch.Scalar(x[0], name="x_1"), minitorch.Scalar(x[1], name="x_2"))
+            (
+                minitorch.Scalar(x[0], name="x_1"),
+                minitorch.Scalar(x[1], name="x_2"),
+            )
         )
 
     def train(self, data, learning_rate, max_epochs=500, log_fn=default_log_fn):

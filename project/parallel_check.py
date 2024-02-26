@@ -12,7 +12,11 @@ print(tmap.parallel_diagnostics(level=3))
 
 # ZIP
 print("ZIP")
-out, a, b = minitorch.zeros((10,)), minitorch.zeros((10,)), minitorch.zeros((10,))
+out, a, b = (
+    minitorch.zeros((10,)),
+    minitorch.zeros((10,)),
+    minitorch.zeros((10,)),
+)
 tzip = minitorch.fast_ops.tensor_zip(njit()(minitorch.operators.eq))
 
 tzip(*out.tuple(), *a.tuple(), *b.tuple())

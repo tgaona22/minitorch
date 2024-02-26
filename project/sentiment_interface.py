@@ -54,7 +54,9 @@ def render_run_sentiment_interface():
     )
 
     dataset_classes = ["negative", "positive"]
-    class_id_to_label = {idx: label for (idx, label) in enumerate(dataset_classes)}
+    class_id_to_label = {
+        idx: label for (idx, label) in enumerate(dataset_classes)
+    }
     st.write("Each sentence is classified according to it's sentiment:")
     st.write(class_id_to_label)
     dataset = load_glue_dataset()
@@ -63,7 +65,12 @@ def render_run_sentiment_interface():
     st.subheader("First 3 sentences in train")
     st.table(
         pd.DataFrame(
-            list(zip(dataset["train"]["sentence"][:3], dataset["train"]["label"][:3])),
+            list(
+                zip(
+                    dataset["train"]["sentence"][:3],
+                    dataset["train"]["label"][:3],
+                )
+            ),
             columns=["Sentence", "Label"],
         )
     )
@@ -84,7 +91,9 @@ def render_run_sentiment_interface():
     learning_rate = col2.number_input(
         "Learning rate", value=0.01, step=0.001, format="%.3f"
     )
-    n_training_data = col1.number_input("N datapoints from training data", value=450)
+    n_training_data = col1.number_input(
+        "N datapoints from training data", value=450
+    )
     n_validation_data = col2.number_input(
         "N datapoints from validation data", value=100
     )
@@ -170,7 +179,9 @@ def render_run_sentiment_interface():
             )
             st_epoch_accuracy.plotly_chart(fig)
 
-            loss_graph = go.Scatter(mode="lines", x=list(range(len(losses))), y=losses)
+            loss_graph = go.Scatter(
+                mode="lines", x=list(range(len(losses))), y=losses
+            )
             fig = go.Figure(loss_graph)
             fig.update_layout(
                 title="Loss Graph",

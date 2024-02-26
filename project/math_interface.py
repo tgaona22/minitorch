@@ -13,7 +13,9 @@ minitorch
 
 def render_math_sandbox(use_scalar=False, use_tensor=False):
     st.write("## Sandbox for Math Functions")
-    st.write("Visualization of the mathematical tests run on the underlying code.")
+    st.write(
+        "Visualization of the mathematical tests run on the underlying code."
+    )
 
     if use_scalar:
         one, two, red = MathTestVariable._comp_testing()
@@ -53,7 +55,9 @@ def render_math_sandbox(use_scalar=False, use_tensor=False):
                 else:
                     out.backward()
             if use_tensor:
-                scatter = go.Scatter(mode="lines", x=xs, y=[x.grad[0] for x in x_var])
+                scatter = go.Scatter(
+                    mode="lines", x=xs, y=[x.grad[0] for x in x_var]
+                )
             else:
                 scatter = go.Scatter(
                     mode="lines", x=xs, y=[x.derivative for x in x_var]
@@ -82,7 +86,10 @@ def render_math_sandbox(use_scalar=False, use_tensor=False):
                 ]
             else:
                 zs = [
-                    [scalar(minitorch.Scalar(x), minitorch.Scalar(y)).data for x in xs]
+                    [
+                        scalar(minitorch.Scalar(x), minitorch.Scalar(y)).data
+                        for x in xs
+                    ]
                     for y in ys
                 ]
         else:
@@ -142,7 +149,10 @@ def render_math_sandbox(use_scalar=False, use_tensor=False):
             scatter = go.Surface(
                 x=xs,
                 y=ys,
-                z=[[scalar(minitorch.tensor([x, y]))[0] for x in xs] for y in ys],
+                z=[
+                    [scalar(minitorch.tensor([x, y]))[0] for x in xs]
+                    for y in ys
+                ],
             )
         else:
             scatter = go.Surface(

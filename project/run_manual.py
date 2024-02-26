@@ -2,6 +2,7 @@
 Be sure you have minitorch installed in you Virtual Env.
 >>> pip install -Ue .
 """
+
 import random
 
 import minitorch
@@ -26,7 +27,9 @@ class Linear(minitorch.Module):
         for i in range(in_size):
             weights = []
             for j in range(out_size):
-                w = self.add_parameter(f"weight_{i}_{j}", 2 * (random.random() - 0.5))
+                w = self.add_parameter(
+                    f"weight_{i}_{j}", 2 * (random.random() - 0.5)
+                )
                 weights.append(w)
             self.weights.append(weights)
         for j in range(out_size):

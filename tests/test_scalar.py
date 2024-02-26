@@ -63,7 +63,9 @@ def test_simple(a: float, b: float) -> None:
 
     # Simple relu
     c = Scalar(a).relu() + Scalar(b).relu()
-    assert_close(c.data, minitorch.operators.relu(a) + minitorch.operators.relu(b))
+    assert_close(
+        c.data, minitorch.operators.relu(a) + minitorch.operators.relu(b)
+    )
 
     # Add others if you would like...
 
@@ -75,7 +77,8 @@ one_arg, two_arg, _ = MathTestVariable._comp_testing()
 @pytest.mark.task1_2
 @pytest.mark.parametrize("fn", one_arg)
 def test_one_args(
-    fn: Tuple[str, Callable[[float], float], Callable[[Scalar], Scalar]], t1: Scalar
+    fn: Tuple[str, Callable[[float], float], Callable[[Scalar], Scalar]],
+    t1: Scalar,
 ) -> None:
     name, base_fn, scalar_fn = fn
     assert_close(scalar_fn(t1).data, base_fn(t1.data))
@@ -85,7 +88,9 @@ def test_one_args(
 @pytest.mark.task1_2
 @pytest.mark.parametrize("fn", two_arg)
 def test_two_args(
-    fn: Tuple[str, Callable[[float, float], float], Callable[[Scalar, Scalar], Scalar]],
+    fn: Tuple[
+        str, Callable[[float, float], float], Callable[[Scalar, Scalar], Scalar]
+    ],
     t1: Scalar,
     t2: Scalar,
 ) -> None:
@@ -102,7 +107,8 @@ def test_two_args(
 @pytest.mark.task1_4
 @pytest.mark.parametrize("fn", one_arg)
 def test_one_derivative(
-    fn: Tuple[str, Callable[[float], float], Callable[[Scalar], Scalar]], t1: Scalar
+    fn: Tuple[str, Callable[[float], float], Callable[[Scalar], Scalar]],
+    t1: Scalar,
 ) -> None:
     name, _, scalar_fn = fn
     derivative_check(scalar_fn, t1)
@@ -112,7 +118,9 @@ def test_one_derivative(
 @pytest.mark.task1_4
 @pytest.mark.parametrize("fn", two_arg)
 def test_two_derivative(
-    fn: Tuple[str, Callable[[float, float], float], Callable[[Scalar, Scalar], Scalar]],
+    fn: Tuple[
+        str, Callable[[float, float], float], Callable[[Scalar, Scalar], Scalar]
+    ],
     t1: Scalar,
     t2: Scalar,
 ) -> None:

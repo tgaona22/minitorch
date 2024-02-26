@@ -449,7 +449,9 @@ def tensor_figure(
         paper_bgcolor="#fcfcfc",
         font_size=20,
         hovermode="x unified",
-        hoverlabel=dict(bgcolor="#fcfcfc", font_size=30, font_family="Times New Roman"),
+        hoverlabel=dict(
+            bgcolor="#fcfcfc", font_size=30, font_family="Times New Roman"
+        ),
         scene=dict(
             xaxis=dict(
                 showbackground=False,

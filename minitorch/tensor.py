@@ -34,11 +34,27 @@ from .tensor_functions import (
 )
 
 if TYPE_CHECKING:
-    from typing import Any, Iterable, List, Optional, Sequence, Tuple, Type, Union
+    from typing import (
+        Any,
+        Iterable,
+        List,
+        Optional,
+        Sequence,
+        Tuple,
+        Type,
+        Union,
+    )
 
     import numpy.typing as npt
 
-    from .tensor_data import Shape, Storage, Strides, UserIndex, UserShape, UserStrides
+    from .tensor_data import (
+        Shape,
+        Storage,
+        Strides,
+        UserIndex,
+        UserShape,
+        UserStrides,
+    )
     from .tensor_functions import Function
     from .tensor_ops import TensorBackend
 
@@ -210,7 +226,9 @@ class Tensor:
     def sum(self, dim: Optional[int] = None) -> Tensor:
         "Compute the sum over dimension `dim`"
         if dim is None:
-            return Sum.apply(self.contiguous().view(self.size), self._ensure_tensor(0))
+            return Sum.apply(
+                self.contiguous().view(self.size), self._ensure_tensor(0)
+            )
         else:
             return Sum.apply(self, self._ensure_tensor(dim))
 
@@ -297,7 +315,9 @@ class Tensor:
                 out = self.backend.add_reduce(out, dim)
         assert out.size == self.size, f"{out.shape} {self.shape}"
         # START CODE CHANGE (2021)
-        return Tensor.make(out._tensor._storage, self.shape, backend=self.backend)
+        return Tensor.make(
+            out._tensor._storage, self.shape, backend=self.backend
+        )
         # END CODE CHANGE (2021)
 
     def zeros(self, shape: Optional[UserShape] = None) -> Tensor:
@@ -332,7 +352,9 @@ class Tensor:
         assert self.is_leaf(), "Only leaf variables can have derivatives."
         if self.grad is None:
             self.grad = Tensor.make(
-                [0] * int(operators.prod(self.shape)), self.shape, backend=self.backend
+                [0] * int(operators.prod(self.shape)),
+                self.shape,
+                backend=self.backend,
             )
         self.grad += x
 

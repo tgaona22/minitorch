@@ -35,7 +35,10 @@ class SentimentCNN(nn.Module):
 
         # 2. convolutional layers
         self.convs = nn.ModuleList(
-            [nn.Conv1d(embedding_dim, feature_map_size, k) for k in kernel_sizes]
+            [
+                nn.Conv1d(embedding_dim, feature_map_size, k)
+                for k in kernel_sizes
+            ]
         )
 
         # 3. final, fully-connected layer for classification
@@ -75,7 +78,12 @@ class SentimentCNN(nn.Module):
 
 # training loop
 def train(
-    model, data_train, data_val, learning_rate=0.001, max_epochs=50, batch_size=128
+    model,
+    data_train,
+    data_val,
+    learning_rate=0.001,
+    max_epochs=50,
+    batch_size=128,
 ):
     # loss and optimization functions
     criterion = nn.BCELoss()
@@ -111,7 +119,12 @@ def train(
             n_batches += 1
 
             for i, y_true in enumerate(y):
-                if output[i] > 0.5 and y_true == 1.0 or output[i] < 0.5 and y_true == 0:
+                if (
+                    output[i] > 0.5
+                    and y_true == 1.0
+                    or output[i] < 0.5
+                    and y_true == 0
+                ):
                     train_correct += 1
 
         # Evaluate on validation set after epoch
@@ -125,7 +138,12 @@ def train(
         val_losses.append(val_loss.item())
         val_correct = 0
         for i, y_true in enumerate(y):
-            if output[i] > 0.5 and y_true == 1.0 or output[i] < 0.5 and y_true == 0:
+            if (
+                output[i] > 0.5
+                and y_true == 1.0
+                or output[i] < 0.5
+                and y_true == 0
+            ):
                 val_correct += 1
         model.train()
         # print(y, output)

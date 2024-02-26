@@ -4,7 +4,13 @@ from typing import Callable, Dict, Iterable, List, Tuple
 import numba
 import pytest
 from hypothesis import given, settings
-from hypothesis.strategies import DataObject, data, integers, lists, permutations
+from hypothesis.strategies import (
+    DataObject,
+    data,
+    integers,
+    lists,
+    permutations,
+)
 
 import minitorch
 from minitorch import MathTestVariable, Tensor, TensorBackend, grad_check
@@ -72,7 +78,9 @@ def test_one_args(
 @pytest.mark.parametrize("fn", two_arg)
 @pytest.mark.parametrize("backend", backend_tests)
 def test_two_args(
-    fn: Tuple[str, Callable[[float, float], float], Callable[[Tensor, Tensor], Tensor]],
+    fn: Tuple[
+        str, Callable[[float, float], float], Callable[[Tensor, Tensor], Tensor]
+    ],
     backend: str,
     data: DataObject,
 ) -> None:
@@ -103,7 +111,9 @@ def test_one_derivative(
 @pytest.mark.parametrize("fn", two_arg)
 @pytest.mark.parametrize("backend", backend_tests)
 def test_two_grad(
-    fn: Tuple[str, Callable[[float, float], float], Callable[[Tensor, Tensor], Tensor]],
+    fn: Tuple[
+        str, Callable[[float, float], float], Callable[[Tensor, Tensor], Tensor]
+    ],
     backend: str,
     data: DataObject,
 ) -> None:
@@ -118,7 +128,9 @@ def test_two_grad(
 @pytest.mark.parametrize("fn", red_arg)
 @pytest.mark.parametrize("backend", backend_tests)
 def test_reduce(
-    fn: Tuple[str, Callable[[Iterable[float]], float], Callable[[Tensor], Tensor]],
+    fn: Tuple[
+        str, Callable[[Iterable[float]], float], Callable[[Tensor], Tensor]
+    ],
     backend: str,
     data: DataObject,
 ) -> None:
@@ -309,7 +321,9 @@ if numba.cuda.is_available():
 @pytest.mark.parametrize("fn", two_arg)
 @pytest.mark.parametrize("backend", backend_tests)
 def test_two_grad_broadcast(
-    fn: Tuple[str, Callable[[float, float], float], Callable[[Tensor, Tensor], Tensor]],
+    fn: Tuple[
+        str, Callable[[float, float], float], Callable[[Tensor, Tensor], Tensor]
+    ],
     backend: str,
     data: DataObject,
 ) -> None:

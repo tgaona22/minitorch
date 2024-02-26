@@ -33,7 +33,9 @@ st.sidebar.markdown(
 
 module_selection = st.sidebar.radio(
     "Module",
-    ["Module 0", "Module 1", "Module 2", "Module 3", "Module 4"][: module_num + 1],
+    ["Module 0", "Module 1", "Module 2", "Module 3", "Module 4"][
+        : module_num + 1
+    ],
     index=module_num,
 )
 

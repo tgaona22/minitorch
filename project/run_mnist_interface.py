@@ -21,7 +21,9 @@ def render_run_image_interface():
 
     show = st.number_input("Image", min_value=0, max_value=100, step=1, value=1)
     st.write(
-        px.imshow(X_train[show], title="y =" + str([int(i) for i in y_train[show]]))
+        px.imshow(
+            X_train[show], title="y =" + str([int(i) for i in y_train[show]])
+        )
     )
 
     st.markdown("### Hyperparameters")
@@ -29,7 +31,9 @@ def render_run_image_interface():
     learning_rate = col1.selectbox(
         "Learning rate", [0.001, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0], index=2
     )
-    max_epochs = col2.number_input("Number of epochs", min_value=1, step=25, value=500)
+    max_epochs = col2.number_input(
+        "Number of epochs", min_value=1, step=25, value=500
+    )
 
     col1, col2 = st.columns(2)
     st_train_button = col1.empty()
@@ -66,7 +70,9 @@ def render_run_image_interface():
             fig = px.imshow(-1 * model.mid.to_numpy()[0], facet_col=0)
             st_epoch_image.plotly_chart(fig)
 
-            loss_graph = go.Scatter(mode="lines", x=list(range(len(losses))), y=losses)
+            loss_graph = go.Scatter(
+                mode="lines", x=list(range(len(losses))), y=losses
+            )
             fig = go.Figure(loss_graph)
             fig.update_layout(
                 title="Loss Graph",

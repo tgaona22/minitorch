@@ -63,7 +63,10 @@ class Conv2d(minitorch.Module):
         self.bias = minitorch.Parameter(0.1 * (r - 0.5))
 
     def forward(self, input):
-        out = minitorch.Conv2dFun.apply(input, self.weights.value) + self.bias.value
+        out = (
+            minitorch.Conv2dFun.apply(input, self.weights.value)
+            + self.bias.value
+        )
         return out
 
 
@@ -106,7 +109,8 @@ for i in range(10000, 10500):
         val_ys.append(1.0 if y == 3 else 0.0)
         val_x += images[i]
 vis.images(
-    numpy.array(val_x).reshape((len(val_ys), 1, 28, 28))[:BATCH], win="val_images"
+    numpy.array(val_x).reshape((len(val_ys), 1, 28, 28))[:BATCH],
+    win="val_images",
 )
 
 

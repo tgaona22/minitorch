@@ -153,9 +153,15 @@ class MathTest(Generic[A]):
     def _comp_testing(cls):
         one_arg, two_arg, red_arg = cls._tests()
         one_argv, two_argv, red_argv = MathTest._tests()
-        one_arg = [(n1, f2, f1) for (n1, f1), (n2, f2) in zip(one_arg, one_argv)]
-        two_arg = [(n1, f2, f1) for (n1, f1), (n2, f2) in zip(two_arg, two_argv)]
-        red_arg = [(n1, f2, f1) for (n1, f1), (n2, f2) in zip(red_arg, red_argv)]
+        one_arg = [
+            (n1, f2, f1) for (n1, f1), (n2, f2) in zip(one_arg, one_argv)
+        ]
+        two_arg = [
+            (n1, f2, f1) for (n1, f1), (n2, f2) in zip(two_arg, two_argv)
+        ]
+        red_arg = [
+            (n1, f2, f1) for (n1, f1), (n2, f2) in zip(red_arg, red_argv)
+        ]
         return one_arg, two_arg, red_arg
 
 

@@ -111,8 +111,20 @@ def broadcast_index(
     Returns:
         None
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    # warning, this was written by gpt4o.
+    # Initialize out_index with zeros
+    for i in range(len(out_index)):
+        out_index[i] = 0
+
+    # Calculate the offset to align the shapes
+    offset = len(big_shape) - len(shape)
+
+    # Map the big_index to out_index following broadcasting rules
+    for i in range(len(shape)):
+        if shape[i] == 1:
+            out_index[i] = 0
+        else:
+            out_index[i] = big_index[i + offset]
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
@@ -129,6 +141,36 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     Raises:
         IndexingError : if cannot broadcast
     """
+    # right align the shapes
+    # if shapes don't have same number of dims,
+    # add dims of length 1 to the smaller shape.
+    if len(shape1) < len(shape2):
+        diff = len(shape2) - len(shape1)
+        s1 = [1] * diff + list(shape1)
+        s2 = list(shape2)
+    elif len(shape1) > len(shape2):
+        diff = len(shape1) - len(shape2)
+        s1 = list(shape1)
+        s2 = [1] * diff + list(shape2)
+    else:
+        s1 = shape1
+        s2 = shape2
+
+    assert len(s1) == len(s2)
+
+    union = list(s1)
+    for i in range(len(s1)):
+        if s1[i] != s2[i]:
+            if s1[i] == 1:
+                union[i] = s2[i]
+            elif s2[i] == 1:
+                union[i] = s1[i]
+            else:
+                raise IndexingError(
+                    f"Cannot broadcast shapes {shape1} and {shape2}"
+                )
+    return tuple(union)
+
     # TODO: Implement for Task 2.2.
     raise NotImplementedError("Need to implement for Task 2.2")
 

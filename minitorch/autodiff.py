@@ -24,8 +24,13 @@ def central_difference(
     Returns:
         An approximation of $f'_i(x_0, \ldots, x_{n-1})$
     """
-    # TODO: Implement for Task 1.1.
-    raise NotImplementedError("Need to implement for Task 1.1")
+    # need to apply f to (x_0, \ldots, x_i + eps/2, \ldots x_n-1)
+    # and to (x_0, \ldots, x_i - eps/2, \ldots x_n-1)
+    right = [val for val in vals]
+    left = [val for val in vals]
+    right[arg] += epsilon / 2
+    left[arg] -= epsilon / 2
+    return (f(*right) - f(*left)) / epsilon
 
 
 variable_count = 1
@@ -63,8 +68,23 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     Returns:
         Non-constant Variables in topological order starting from the right.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError("Need to implement for Task 1.4")
+    marked = []
+    ordered_list = []
+
+    def _visit(var: Variable) -> None:
+        if var.unique_id in marked or var.is_constant():
+            return
+
+        marked.append(var.unique_id)
+
+        for parent in var.parents:
+            _visit(parent)
+
+        ordered_list.append(var)
+
+    _visit(variable)
+
+    return list(reversed(ordered_list))
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -78,8 +98,21 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError("Need to implement for Task 1.4")
+    ordered_list = topological_sort(variable)
+    derivs = {ordered_list[0].unique_id: deriv}
+    for var in ordered_list:
+        if not var.is_leaf():
+            assert derivs[var.unique_id] is not None
+            back = var.chain_rule(derivs[var.unique_id])
+
+            for var, deriv in back:
+                if var.unique_id not in derivs:
+                    derivs[var.unique_id] = 0
+                derivs[var.unique_id] += deriv
+        else:
+            var.accumulate_derivative(derivs[var.unique_id])
+
+    return
 
 
 @dataclass

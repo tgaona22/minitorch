@@ -172,9 +172,16 @@ class Scalar:
         # zips the inputs with the backward_vals
         # this makes the tests pass.
         # what this function really does is move you back one node in the computation graph.
+        # should insure that
 
         backward_vals = h.last_fn._backward(h.ctx, d_output)
-        return zip(h.inputs, backward_vals)
+        result = []
+        for i in range(len(backward_vals)):
+            print(h.inputs[i].is_constant())
+            if not h.inputs[i].is_constant():
+                result.append((h.inputs[i], backward_vals[i]))
+        return result
+        # return zip(h.inputs, backward_vals)
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """

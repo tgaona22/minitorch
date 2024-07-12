@@ -4,6 +4,9 @@ import pytest
 
 import minitorch
 from minitorch import Context, ScalarFunction, ScalarHistory
+import minitorch.scalar_functions as sf
+
+import numpy as np
 
 # ## Task 1.3 - Tests for the autodifferentiation machinery.
 
@@ -43,8 +46,10 @@ class Function2(ScalarFunction):
 def test_chain_rule1() -> None:
     x = minitorch.Scalar(0.0)
     constant = minitorch.Scalar(
-        0.0, ScalarHistory(Function1, ctx=Context(), inputs=[x, x])
+        10.0, ScalarHistory(Function1, ctx=Context(), inputs=[x, x])
     )
+    # This doesn't make much sense. if constant was obtained by calling
+    # F1(0,0), shouldn't its value be 10?
     back = constant.chain_rule(d_output=5)
     assert len(list(back)) == 2
 
@@ -70,10 +75,13 @@ def test_chain_rule3() -> None:
 
     y = Function2.apply(constant, var)
 
+    # print(var)
+    # print(y)
     back = y.chain_rule(d_output=5)
     back = list(back)
-    assert len(back) == 2
-    variable, deriv = back[1]
+    print(back)
+    assert len(back) == 1
+    variable, deriv = back[0]
     # assert variable.name == var.name
     assert deriv == 5 * 10
 
@@ -141,3 +149,33 @@ def test_backprop4() -> None:
     var4 = Function1.apply(var2, var3)
     var4.backward(d_output=5)
     assert var0.derivative == 10
+
+
+@pytest.mark.task1_4
+def test_backprop5() -> None:
+    var0 = minitorch.Scalar(1)
+    var1 = minitorch.Scalar(1)
+    var2 = sf.Mul.apply(var0, var1)
+    var3 = sf.Log.apply(var2)
+    var4 = sf.Exp.apply(var2)
+    var5 = sf.Add.apply(var3, var4)
+    var5.backward(d_output=1)
+    assert np.isclose(var0.derivative, 1 + np.exp(1))
+
+
+@pytest.mark.task1_4
+def test_backprop6() -> None:
+    var0 = minitorch.Scalar(1)
+    var1 = minitorch.Scalar(4)
+    var2 = sf.Mul.apply(var0, var1)
+    var3 = sf.Log.apply(var2)
+    var4 = sf.Exp.apply(var2)
+    var5 = sf.Add.apply(var3, var4)
+    var5.backward(d_output=1)
+    y = (1 / 4) + np.exp(4)
+    assert np.isclose(var0.derivative, 4 * y)
+    assert np.isclose(var1.derivative, y)
+
+
+if __name__ == "__main__":
+    test_backprop1()

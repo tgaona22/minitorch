@@ -163,25 +163,15 @@ class Scalar:
         assert h.last_fn is not None
         assert h.ctx is not None
 
-        # TODO: Implement for Task 1.3.
-
-        # the name of this function is extremely misleading.
-        # it takes the history of the Scalar
-        # which is (last_fn, ctx, inputs)
-        # calls backward on last_fn.
-        # zips the inputs with the backward_vals
-        # this makes the tests pass.
+        # the name of this function is extremely misleading imo.
         # what this function really does is move you back one node in the computation graph.
-        # should insure that
 
         backward_vals = h.last_fn._backward(h.ctx, d_output)
         result = []
         for i in range(len(backward_vals)):
-            print(h.inputs[i].is_constant())
             if not h.inputs[i].is_constant():
                 result.append((h.inputs[i], backward_vals[i]))
         return result
-        # return zip(h.inputs, backward_vals)
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """

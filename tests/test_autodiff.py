@@ -175,7 +175,3 @@ def test_backprop6() -> None:
     y = (1 / 4) + np.exp(4)
     assert np.isclose(var0.derivative, 4 * y)
     assert np.isclose(var1.derivative, y)
-
-
-if __name__ == "__main__":
-    test_backprop1()

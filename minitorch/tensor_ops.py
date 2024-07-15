@@ -398,8 +398,26 @@ def tensor_reduce(
         a_strides: Strides,
         reduce_dim: int,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        # loop over indices of out.
+        out_idx = np.zeros(len(out_shape), dtype=np.int32)
+        a_idx = np.zeros(len(a_shape), dtype=np.int32)
+        for i in range(len(out)):
+            to_index(i, out_shape, out_idx)
+            # the starting index for the reduction
+            # is the same as the out index.
+            to_index(i, out_shape, a_idx)
+
+            # get the first position in a.
+            a_pos = index_to_position(a_idx, a_strides)
+            acc = a_storage[a_pos]
+            # reduce along the reduce_dim.
+            for j in range(1, a_shape[reduce_dim]):
+                a_idx[reduce_dim] += 1
+                a_pos = index_to_position(a_idx, a_strides)
+                acc = fn(acc, a_storage[a_pos])
+
+            out_pos = index_to_position(out_idx, out_strides)
+            out[out_pos] = acc
 
     return _reduce
 

@@ -269,22 +269,24 @@ def tensor_map(
     ) -> None:
         # simple version
         if len(out_shape) == len(in_shape):
+            assert np.all(out_shape == in_shape)
             # loop over the indices for the in tensor.
-            in_idx = np.zeros(in_shape, dtype=np.int32)
+            in_idx = np.zeros(len(in_shape), dtype=np.int32)
             for i in range(len(in_storage)):
                 to_index(i, in_shape, in_idx)
-                val = fn(in_storage[i])
+                in_pos = index_to_position(in_idx, in_strides)
+                val = fn(in_storage[in_pos])
                 # where you write val depends on the
                 # stride of the output!
-                j = index_to_position(in_idx, out_strides)
-                out[j] = val
+                out_pos = index_to_position(in_idx, out_strides)
+                out[out_pos] = val
         else:
             # assuming that in_shape broadcasts to out_shape.
             # can loop over all indices in out_shape.
             # determine the corresponding index in in_shape.
             # and repeat as above.
-            out_idx = np.zeros(out_shape, dtype=np.int32)
-            in_idx = np.zeros(in_shape, dtype=np.int32)
+            out_idx = np.zeros(len(out_shape), dtype=np.int32)
+            in_idx = np.zeros(len(in_shape), dtype=np.int32)
             for o_i in range(len(out)):
                 to_index(o_i, out_shape, out_idx)
                 in_idx = broadcast_index(out_idx, out_shape, in_shape, in_idx)
@@ -335,8 +337,38 @@ def tensor_zip(fn: Callable[[float, float], float]) -> Callable[
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        if np.all(a_shape == b_shape):
+            # simple, loop over indices in the a/b/out tensors
+            idx = np.zeros(len(out_shape), dtype=np.int32)
+            for i in range(len(out)):
+                to_index(i, out_shape, idx)
+                a_pos = index_to_position(idx, a_strides)
+                b_pos = index_to_position(idx, b_strides)
+                val = fn(a_storage[a_pos], b_storage[b_pos])
+                out_pos = index_to_position(idx, out_strides)
+                out[out_pos] = val
+        else:
+            # assume that a_shape and b_shape both
+            # broadcast to out_shape.
+            # similar idea, loop over indices to out,
+            # convert to indices to a and b and repeat.
+            out_idx = np.zeros(len(out_shape), dtype=np.int32)
+            a_idx = np.zeros(len(a_shape), dtype=np.int32)
+            b_idx = np.zeros(len(b_shape), dtype=np.int32)
+            for i in range(len(out)):
+                to_index(i, out_shape, out_idx)
+                broadcast_index(out_idx, out_shape, a_shape, a_idx)
+                broadcast_index(out_idx, out_shape, b_shape, b_idx)
+                a_pos = index_to_position(a_idx, a_strides)
+                b_pos = index_to_position(b_idx, b_strides)
+                val = fn(a_storage[a_pos], b_storage[b_pos])
+                out_pos = index_to_position(out_idx, out_strides)
+                out[out_pos] = val
+                # there is some code duplication here which can be fixed
+                # later, for now we'll leave it until tests pass.
+                # the main difference in the two cases is whether one
+                # index suffices for all 3 tensors or whether separate
+                # indices are needed and broadcasting is required.
 
     return _zip
 

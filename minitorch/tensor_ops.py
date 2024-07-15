@@ -267,8 +267,32 @@ def tensor_map(
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        # simple version
+        if len(out_shape) == len(in_shape):
+            # loop over the indices for the in tensor.
+            in_idx = np.zeros(in_shape, dtype=np.int32)
+            for i in range(len(in_storage)):
+                to_index(i, in_shape, in_idx)
+                val = fn(in_storage[i])
+                # where you write val depends on the
+                # stride of the output!
+                j = index_to_position(in_idx, out_strides)
+                out[j] = val
+        else:
+            # assuming that in_shape broadcasts to out_shape.
+            # can loop over all indices in out_shape.
+            # determine the corresponding index in in_shape.
+            # and repeat as above.
+            out_idx = np.zeros(out_shape, dtype=np.int32)
+            in_idx = np.zeros(in_shape, dtype=np.int32)
+            for o_i in range(len(out)):
+                to_index(o_i, out_shape, out_idx)
+                in_idx = broadcast_index(out_idx, out_shape, in_shape, in_idx)
+                in_pos = index_to_position(in_idx, in_strides)
+                in_val = in_storage[in_pos]
+                out_val = fn(in_val)
+                out_pos = index_to_position(out_idx, out_strides)
+                out[out_pos] = out_val
 
     return _map
 

@@ -119,6 +119,9 @@ def test_shape_broadcast() -> None:
     c = minitorch.shape_broadcast((2, 5), (5,))
     assert c == (2, 5)
 
+    c = minitorch.shape_broadcast((1, 2, 3, 4), (2, 1, 4))
+    assert c == (1, 2, 3, 4)
+
 
 @given(tensor_data())
 def test_string(tensor_data: TensorData) -> None:

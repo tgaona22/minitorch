@@ -112,6 +112,7 @@ def broadcast_index(
         None
     """
     # warning, this was written by gpt4o.
+    # but after thinking for a while it makes sense.
     # Initialize out_index with zeros
     for i in range(len(out_index)):
         out_index[i] = 0
@@ -170,9 +171,6 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
                     f"Cannot broadcast shapes {shape1} and {shape2}"
                 )
     return tuple(union)
-
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
 
 
 def strides_from_shape(shape: UserShape) -> UserStrides:

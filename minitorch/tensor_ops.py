@@ -268,8 +268,7 @@ def tensor_map(
         in_strides: Strides,
     ) -> None:
         # simple version
-        if len(out_shape) == len(in_shape):
-            assert np.all(out_shape == in_shape)
+        if np.all(out_shape == in_shape):
             # loop over the indices for the in tensor.
             in_idx = np.zeros(len(in_shape), dtype=np.int32)
             for i in range(len(in_storage)):
@@ -289,7 +288,7 @@ def tensor_map(
             in_idx = np.zeros(len(in_shape), dtype=np.int32)
             for o_i in range(len(out)):
                 to_index(o_i, out_shape, out_idx)
-                in_idx = broadcast_index(out_idx, out_shape, in_shape, in_idx)
+                broadcast_index(out_idx, out_shape, in_shape, in_idx)
                 in_pos = index_to_position(in_idx, in_strides)
                 in_val = in_storage[in_pos]
                 out_val = fn(in_val)

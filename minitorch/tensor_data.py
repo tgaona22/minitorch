@@ -43,8 +43,7 @@ def index_to_position(index: Index, strides: Strides) -> int:
         Position in storage
     """
 
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError("Need to implement for Task 2.1")
+    return np.sum(index * strides)
 
 
 def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
@@ -60,8 +59,37 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         out_index : return index corresponding to position.
 
     """
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError("Need to implement for Task 2.1")
+    # It should be made clearer here that 'ordinal' refers
+    # to a position in the storage array.
+
+    # example: arange(12) with shape (2, 3, 2), contiguous stride.
+    # the indices for each ordinal are in order:
+    # 000, 001, 010, 011, 020, 021,
+    # 100, 101, 110, 111, 120, 121
+    # so for instance, ordinal 8 -> 110
+    # observe that
+    # 8 = 0 * 1 + 1 * 2 + 1 * (2*3)
+    # 9 = 1 * 1 + 1 * 2 + 1 * (2*3)
+    # 11 -> 121 and 11 = 1 * 1 + 2 * 2 + 1 * (2*3)
+    # from which the pattern becomes apparent.
+    # For a shape (d1, d2, ..., dn), let x_i
+    # be the product d_{i+1} * ... d_n.
+    # so x_n = 1. Then an ordinal 0 <= x < size can be written
+    # in the form x = sum_{i=1}^n a_i*x_i.
+    # The digits a_i provide the index in the shape.
+    # From this, an algorithm to convert an ordinal to the index is
+    # similar to the division algorithm.
+    # For example, 9 / 6 = 1 with remainder 3.
+    # 3 / 2 = 1 with remainder 1. 1 / 1 = 1 with remainder 0.
+    # Hence 9 -> 111. Likewise, 8 / 6 = 1 remainder 2,
+    # 2 / 2 = 1 remainder 0, and 0 / 1 = 0.
+
+    x = np.zeros(len(shape))
+    for i in range(len(x)):
+        x[i] = np.prod(shape[i + 1 :])
+    for i in range(len(out_index)):
+        out_index[i] = ordinal // x[i]
+        ordinal = ordinal % x[i]
 
 
 def broadcast_index(
@@ -83,8 +111,21 @@ def broadcast_index(
     Returns:
         None
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    # warning, this was written by gpt4o.
+    # but after thinking for a while it makes sense.
+    # Initialize out_index with zeros
+    for i in range(len(out_index)):
+        out_index[i] = 0
+
+    # Calculate the offset to align the shapes
+    offset = len(big_shape) - len(shape)
+
+    # Map the big_index to out_index following broadcasting rules
+    for i in range(len(shape)):
+        if shape[i] == 1:
+            out_index[i] = 0
+        else:
+            out_index[i] = big_index[i + offset]
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
@@ -101,8 +142,35 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     Raises:
         IndexingError : if cannot broadcast
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    # right align the shapes
+    # if shapes don't have same number of dims,
+    # add dims of length 1 to the smaller shape.
+    if len(shape1) < len(shape2):
+        diff = len(shape2) - len(shape1)
+        s1 = [1] * diff + list(shape1)
+        s2 = list(shape2)
+    elif len(shape1) > len(shape2):
+        diff = len(shape1) - len(shape2)
+        s1 = list(shape1)
+        s2 = [1] * diff + list(shape2)
+    else:
+        s1 = shape1
+        s2 = shape2
+
+    assert len(s1) == len(s2)
+
+    union = list(s1)
+    for i in range(len(s1)):
+        if s1[i] != s2[i]:
+            if s1[i] == 1:
+                union[i] = s2[i]
+            elif s2[i] == 1:
+                union[i] = s1[i]
+            else:
+                raise IndexingError(
+                    f"Cannot broadcast shapes {shape1} and {shape2}"
+                )
+    return tuple(union)
 
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
@@ -231,8 +299,12 @@ class TensorData:
             range(len(self.shape))
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
 
-        # TODO: Implement for Task 2.1.
-        raise NotImplementedError("Need to implement for Task 2.1")
+        new_shape = [0] * len(self.shape)
+        new_stride = [0] * len(self.shape)
+        for i in range(len(new_shape)):
+            new_shape[i] = self.shape[order[i]]
+            new_stride[i] = self.strides[order[i]]
+        return TensorData(self._storage, tuple(new_shape), tuple(new_stride))
 
     def to_string(self) -> str:
         s = ""

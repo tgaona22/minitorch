@@ -202,7 +202,10 @@ class LT(Function):
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
         (a, b) = ctx.saved_values
-        return Tensor([0] * a.size()), Tensor([0], b.size())
+        # these tensors need to be the same shape as a and b
+        return tensor(np.zeros(a.shape).tolist()), tensor(
+            np.zeros(b.shape).tolist()
+        )
 
 
 class EQ(Function):
@@ -214,7 +217,9 @@ class EQ(Function):
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
         (a, b) = ctx.saved_values
-        return Tensor([0] * a.size()), Tensor([0], b.size())
+        return tensor(np.zeros(a.shape).tolist()), tensor(
+            np.zeros(b.shape).tolist()
+        )
 
 
 class IsClose(Function):
@@ -228,12 +233,18 @@ class Permute(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, order: Tensor) -> Tensor:
         ctx.save_for_backward(a, order)
-        return a.permute(order)
+        o = [int(order[idx]) for idx in order._tensor.indices()]
+        return a._new(a._tensor.permute(*o))
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError("Need to implement for Task 2.4")
+        a, order = ctx.saved_tensors
+        order_list = [int(order[idx]) for idx in order._tensor.indices()]
+        reverse_order = [order_list.index(i) for i in range(len(order_list))]
+        return (
+            grad_output._new(grad_output._tensor.permute(*reverse_order)),
+            0.0,
+        )
 
 
 class View(Function):

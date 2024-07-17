@@ -84,12 +84,35 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
     # Hence 9 -> 111. Likewise, 8 / 6 = 1 remainder 2,
     # 2 / 2 = 1 remainder 0, and 0 / 1 = 0.
 
-    x = np.zeros(len(shape))
-    for i in range(len(x)):
-        x[i] = np.prod(shape[i + 1 :])
-    for i in range(len(out_index)):
-        out_index[i] = ordinal // x[i]
-        ordinal = ordinal % x[i]
+    if False:
+        x = np.zeros(len(shape))
+        o = np.zeros(len(shape))
+        o[0] = ordinal
+        for i in range(len(x)):
+            x[i] = np.prod(shape[i + 1 :])
+            if i == 0:
+                o[0] = ordinal
+            else:
+                o[i] = o[i - 1] % x[i]
+        for i in range(len(out_index)):
+            out_index[i] = o[i] // x[i]
+
+    n = len(shape)
+    x = np.empty(n, dtype=np.int64)
+
+    # Precompute products of dimensions
+    product = 1
+    for i in range(n - 1, -1, -1):
+        x[i] = product
+        product *= shape[i]
+
+    # Compute indices for each dimension in parallel
+    # Note: Numba's parallel=True may not speed up this loop due to overhead and simplicity of operations
+    for i in range(n):
+        if i == 0:
+            out_index[i] = ordinal // x[i] % shape[i]
+        else:
+            out_index[i] = (ordinal // x[i]) % shape[i]
 
 
 def broadcast_index(

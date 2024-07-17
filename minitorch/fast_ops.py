@@ -161,10 +161,32 @@ def tensor_map(
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 3.1.
-        raise NotImplementedError("Need to implement for Task 3.1")
+        same_strides = np.array_equal(in_strides, out_strides)
+        same_shapes = np.array_equal(in_shape, out_shape)
+        if same_strides and same_shapes:
+            for i in prange(len(out)):
+                out[i] = fn(in_storage[i])
+        elif same_shapes:
+            for i in prange(len(out)):
+                idx = np.zeros(len(out_shape), dtype=np.int32)
+                to_index(i, out_shape, idx)
+                in_pos = index_to_position(idx, in_strides)
+                out_pos = index_to_position(idx, out_strides)
+                out_val = fn(in_storage[in_pos])
+                out[out_pos] = out_val
+        else:
+            for i in prange(len(out)):
+                out_idx = np.zeros(len(out_shape), dtype=np.int32)
+                in_idx = np.zeros(len(in_shape), dtype=np.int32)
+                to_index(i, out_shape, out_idx)
+                broadcast_index(out_idx, out_shape, in_shape, in_idx)
+                in_pos = index_to_position(in_idx, in_strides)
+                out_pos = index_to_position(out_idx, out_strides)
+                out_val = fn(in_storage[in_pos])
+                out[out_pos] = out_val
 
     return njit(parallel=True)(_map)  # type: ignore
+    # return _map
 
 
 def tensor_zip(fn: Callable[[float, float], float]) -> Callable[
@@ -199,8 +221,42 @@ def tensor_zip(fn: Callable[[float, float], float]) -> Callable[
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 3.1.
-        raise NotImplementedError("Need to implement for Task 3.1")
+        a_out_same_shape = np.array_equal(a_shape, out_shape)
+        b_out_same_shape = np.array_equal(b_shape, out_shape)
+        a_out_same_strides = np.array_equal(a_strides, out_strides)
+        b_out_same_strides = np.array_equal(b_strides, out_strides)
+
+        if (
+            a_out_same_strides
+            and b_out_same_strides
+            and a_out_same_shape
+            and b_out_same_shape
+        ):
+            # avoid indexing
+            for i in prange(len(out)):
+                out[i] = fn(a_storage[i], b_storage[i])
+        elif a_out_same_shape and b_out_same_shape:
+            for i in prange(len(out)):
+                idx = np.zeros(len(out_shape), dtype=np.int32)
+                to_index(i, out_shape, idx)
+                a_pos = index_to_position(idx, a_strides)
+                b_pos = index_to_position(idx, b_strides)
+                val = fn(a_storage[a_pos], b_storage[b_pos])
+                out_pos = index_to_position(idx, out_strides)
+                out[out_pos] = val
+        else:
+            for i in prange(len(out)):
+                out_idx = np.zeros(len(out_shape), dtype=np.int32)
+                a_idx = np.zeros(len(a_shape), dtype=np.int32)
+                b_idx = np.zeros(len(b_shape), dtype=np.int32)
+                to_index(i, out_shape, out_idx)
+                broadcast_index(out_idx, out_shape, a_shape, a_idx)
+                broadcast_index(out_idx, out_shape, b_shape, b_idx)
+                a_pos = index_to_position(a_idx, a_strides)
+                b_pos = index_to_position(b_idx, b_strides)
+                val = fn(a_storage[a_pos], b_storage[b_pos])
+                out_pos = index_to_position(out_idx, out_strides)
+                out[out_pos] = val
 
     return njit(parallel=True)(_zip)  # type: ignore
 
@@ -233,8 +289,24 @@ def tensor_reduce(
         a_strides: Strides,
         reduce_dim: int,
     ) -> None:
-        # TODO: Implement for Task 3.1.
-        raise NotImplementedError("Need to implement for Task 3.1")
+        # loop over indices of out.
+        for i in prange(len(out)):
+            out_idx = np.zeros(len(out_shape), dtype=np.int32)
+            a_idx = np.zeros(len(a_shape), dtype=np.int32)
+            to_index(i, out_shape, out_idx)
+            to_index(i, out_shape, a_idx)
+
+            # get the first position in a.
+            a_pos = index_to_position(a_idx, a_strides)
+            acc = a_storage[a_pos]
+            # reduce along the reduce_dim.
+            for j in range(1, a_shape[reduce_dim]):
+                a_idx[reduce_dim] += 1
+                a_pos = index_to_position(a_idx, a_strides)
+                acc = fn(acc, a_storage[a_pos])
+
+            out_pos = index_to_position(out_idx, out_strides)
+            out[out_pos] = acc
 
     return njit(parallel=True)(_reduce)  # type: ignore
 

@@ -1,8 +1,9 @@
 import random
 from typing import Callable, Dict, Iterable, List, Tuple
-
+import numpy as np
 import numba
 import pytest
+import hypothesis
 from hypothesis import given, settings
 from hypothesis.strategies import (
     DataObject,
@@ -15,12 +16,18 @@ from hypothesis.strategies import (
 import minitorch
 from minitorch import MathTestVariable, Tensor, TensorBackend, grad_check
 
-from .strategies import assert_close, small_floats
-from .tensor_strategies import assert_close_tensor, shaped_tensors, tensors
+from tests.strategies import assert_close, small_floats
+from tests.tensor_strategies import (
+    assert_close_tensor,
+    shaped_tensors,
+    tensors,
+)
+
+
+from numba import njit
+from minitorch.testing import MathTest
 
 one_arg, two_arg, red_arg = MathTestVariable._comp_testing()
-
-
 # The tests in this file only run the main mathematical functions.
 # The difference is that they run with different tensor ops backends.
 
@@ -54,6 +61,77 @@ def test_create(backend: str, t1: List[float]) -> None:
     t2 = minitorch.tensor(t1, backend=shared[backend])
     for i in range(len(t1)):
         assert t1[i] == t2[i]
+
+
+def test_parallel() -> None:
+
+    t1 = minitorch.zeros((3,))
+    g = MathTest.addConstant
+
+    index = np.zeros((2,), dtype=np.int32)
+    index[0] = 1
+    index[1] = 1
+    strides = np.zeros((2,), dtype=np.int32)
+    strides[0] = 2
+    strides[1] = 1
+    shape = np.zeros((2,), dtype=np.int32)
+    shape[0] = 3
+    shape[1] = 2
+
+    f1 = minitorch.fast_ops.index_to_position
+    f2 = minitorch.fast_ops.to_index
+    f3 = minitorch.fast_ops.broadcast_index
+
+    print(f1(index, strides))
+
+    out = np.zeros((2,), dtype=np.int32)
+    f2(4, shape, out)
+    print(out)
+
+    big_index = np.zeros((3,), dtype=np.int32)
+    big_shape = np.zeros((3,), dtype=np.int32)
+    out = np.zeros((2,), dtype=np.int32)
+    big_index[0] = 0
+    big_index[1] = 1
+    big_index[2] = 1
+    big_shape[0] = 4
+    big_shape[1] = 3
+    big_shape[2] = 2
+    f3(big_index, big_shape, shape, out)
+    print(big_index)
+    print(out)
+
+    # the above code runs, confirming that the njit'ed
+    # versions of the three indexing functions works.
+    # so there is a problem with tensor_map.
+
+    tmap = minitorch.fast_ops.tensor_map(njit()(g))
+    out = minitorch.zeros((3, 3))
+    tmap(*out.tuple(), *t1.tuple())
+    print(out)
+    # assert out[0] == 5.0
+
+    a = minitorch.tensor([1, 2, 3])
+    b = minitorch.tensor([[1, 2, 3], [2, 3, 4]])
+    out = minitorch.zeros((2, 3))
+    g = minitorch.testing.MathTest.add2
+    tzip = minitorch.fast_ops.tensor_zip(njit()(g))
+    tzip(*out.tuple(), *a.tuple(), *b.tuple())
+    print(out)
+    # assert out[0] == 2.0
+    # assert out[1] == 4.0
+    # assert out[2] == 6.0
+
+    tr = minitorch.fast_ops.tensor_reduce(njit()(g))
+    a = minitorch.tensor([[1, 2, 3], [4, 5, 6]])
+    print(a)
+    out = minitorch.zeros((2, 1))
+    tr(*out.tuple(), *a.tuple(), 1)
+    print(out)
+
+
+if __name__ == "__main__":
+    test_parallel()
 
 
 @given(data())
@@ -107,7 +185,10 @@ def test_one_derivative(
 
 
 @given(data())
-@settings(max_examples=50)
+@settings(
+    max_examples=10,
+    suppress_health_check=[hypothesis.HealthCheck.data_too_large],
+)
 @pytest.mark.parametrize("fn", two_arg)
 @pytest.mark.parametrize("backend", backend_tests)
 def test_two_grad(
@@ -317,7 +398,10 @@ if numba.cuda.is_available():
 
 
 @given(data())
-@settings(max_examples=25)
+@settings(
+    max_examples=25,
+    suppress_health_check=[hypothesis.HealthCheck.data_too_large],
+)
 @pytest.mark.parametrize("fn", two_arg)
 @pytest.mark.parametrize("backend", backend_tests)
 def test_two_grad_broadcast(

@@ -354,9 +354,24 @@ def _tensor_matrix_multiply(
     """
     a_batch_stride = a_strides[0] if a_shape[0] > 1 else 0
     b_batch_stride = b_strides[0] if b_shape[0] > 1 else 0
-
-    # TODO: Implement for Task 3.2.
-    raise NotImplementedError("Need to implement for Task 3.2")
+    a_rs = a_strides[-2]  # row strides
+    b_rs = b_strides[-2]
+    a_cs = a_strides[-1]  # col strides
+    b_cs = b_strides[-1]
+    # need same number of cols in a as rows in b.
+    assert a_shape[-1] == b_shape[-2]
+    for n in prange(out_shape[0]):
+        for i in prange(out_shape[1]):
+            for j in prange(out_shape[2]):
+                out_pos = (
+                    out_strides[0] * n + out_strides[1] * i + out_strides[2] * j
+                )
+                a_pos_0 = a_batch_stride * n + a_rs * i
+                b_pos_0 = b_batch_stride * n + b_cs * j
+                for k in range(a_shape[-1]):
+                    a_pos = a_pos_0 + a_cs * k
+                    b_pos = b_pos_0 + b_rs * k
+                    out[out_pos] += a_storage[a_pos] * b_storage[b_pos]
 
 
 tensor_matrix_multiply = njit(parallel=True, fastmath=True)(

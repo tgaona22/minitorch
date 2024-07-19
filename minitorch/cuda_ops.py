@@ -160,9 +160,6 @@ def tensor_map(
         in_index = cuda.local.array(MAX_DIMS, numba.int32)
         i = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
 
-        if i == 2:
-            pass
-
         # i is a position in the out array.
         # we need to know the corresponding position in the in array.
         if i < out_size:
@@ -406,8 +403,26 @@ def _mm_practice(out: Storage, a: Storage, b: Storage, size: int) -> None:
         size (int): size of the square
     """
     BLOCK_DIM = 32
-    # TODO: Implement for Task 3.3.
-    raise NotImplementedError("Need to implement for Task 3.3")
+    # we have a single block and (32, 32) threads per block.
+    i = cuda.threadIdx.x
+    j = cuda.threadIdx.y
+
+    a_shared = cuda.shared.array((BLOCK_DIM, BLOCK_DIM), numba.float64)
+    b_shared = cuda.shared.array((BLOCK_DIM, BLOCK_DIM), numba.float64)
+    result = 0
+
+    if i < size and j < size:
+        # read into shared memory
+        idx = i * size + j
+        a_shared[i, j] = a[idx]
+        b_shared[i, j] = b[idx]
+    cuda.syncthreads()
+
+    if i < size and j < size:
+        for k in range(size):
+            result += a_shared[i, k] * b_shared[k, j]
+
+        out[i * size + j] = result
 
 
 jit_mm_practice = cuda.jit()(_mm_practice)

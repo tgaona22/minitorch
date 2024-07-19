@@ -155,11 +155,24 @@ def tensor_map(
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
+        # here blocks are one dimensional.
         out_index = cuda.local.array(MAX_DIMS, numba.int32)
         in_index = cuda.local.array(MAX_DIMS, numba.int32)
         i = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
-        # TODO: Implement for Task 3.3.
-        raise NotImplementedError("Need to implement for Task 3.3")
+
+        if i == 2:
+            pass
+
+        # i is a position in the out array.
+        # we need to know the corresponding position in the in array.
+        if i < out_size:
+            to_index(i, out_shape, out_index)
+            broadcast_index(out_index, out_shape, in_shape, in_index)
+            in_pos = index_to_position(in_index[: len(in_shape)], in_strides)
+            out_pos = index_to_position(
+                out_index[: len(out_shape)], out_strides
+            )
+            out[out_pos] = fn(in_storage[in_pos])
 
     return cuda.jit()(_map)  # type: ignore
 
@@ -198,8 +211,19 @@ def tensor_zip(fn: Callable[[float, float], float]) -> Callable[
         b_index = cuda.local.array(MAX_DIMS, numba.int32)
         i = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
 
-        # TODO: Implement for Task 3.3.
-        raise NotImplementedError("Need to implement for Task 3.3")
+        if i == 2:
+            pass
+
+        if i < out_size:
+            to_index(i, out_shape, out_index)
+            broadcast_index(out_index, out_shape, a_shape, a_index)
+            broadcast_index(out_index, out_shape, b_shape, b_index)
+            a_pos = index_to_position(a_index[: len(a_shape)], a_strides)
+            b_pos = index_to_position(b_index[: len(b_shape)], b_strides)
+            out_pos = index_to_position(
+                out_index[: len(out_shape)], out_strides
+            )
+            out[out_pos] = fn(a_storage[a_pos], b_storage[b_pos])
 
     return cuda.jit()(_zip)  # type: ignore
 
@@ -229,10 +253,28 @@ def _sum_practice(out: Storage, a: Storage, size: int) -> None:
 
     cache = cuda.shared.array(BLOCK_DIM, numba.float64)
     i = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
-    pos = cuda.threadIdx.x
+    t = cuda.threadIdx.x
 
-    # TODO: Implement for Task 3.3.
-    raise NotImplementedError("Need to implement for Task 3.3")
+    # load all data for this block into the cache
+    if i < size:
+        cache[t] = a[i]
+    # wait for all data to be loaded before proceeding.
+    cuda.syncthreads()
+    print(t, cache[t])
+
+    s = 1
+    # when stride 1, we execute on multiples of 2
+    # when stride 2, we execute on multiples of 4, 4 -> 8, etc.
+    while s <= BLOCK_DIM // 2:
+        if t % (2 * s) == 0 and t + s < BLOCK_DIM:
+            cache[t] = cache[t] + cache[t + s]
+        # wait to do the next iteration of striding until
+        # all threads are done with this one.
+        cuda.syncthreads()
+        s = s * 2
+
+    # finally we can read from cache[0]
+    out[cuda.blockIdx.x] = cache[0]
 
 
 jit_sum_practice = cuda.jit()(_sum_practice)
@@ -275,14 +317,60 @@ def tensor_reduce(
         reduce_dim: int,
         reduce_value: float,
     ) -> None:
+        # the size of out along the reduce dimension is the
+        # a_shape[reduce_dim] // BLOCK_DIM (num threads per block)
         BLOCK_DIM = 1024
         cache = cuda.shared.array(BLOCK_DIM, numba.float64)
         out_index = cuda.local.array(MAX_DIMS, numba.int32)
         out_pos = cuda.blockIdx.x
-        pos = cuda.threadIdx.x
+        t = cuda.threadIdx.x
+        reduce_dim_len = a_shape[reduce_dim]
+        # it looks like we have at least one block for each position
+        # in the out array. E.g. if the a_shape = (8, 16, 32)
+        # and reduce_dim = 1, the shape of out is (8, 16 // BLOCK_DIM, 32)
 
-        # TODO: Implement for Task 3.3.
-        raise NotImplementedError("Need to implement for Task 3.3")
+        # what is the index in out corresponding to the current block?
+        to_index(out_pos, out_shape, out_index)
+        # e.g. if the index is (0, 2, 0) and reduce_dim = 2,
+        # we need the positions in a corresponding to
+        # (0,2,0), (0,2,1), (0,2,2), ... (0,2,D)
+        # where D = a_shape[reduce_dim].
+        # we can get this by mapping the first index to a position
+        # in a, and then incrementing by a_strides[reduce_dim]
+        start = index_to_position(out_index[: len(out_shape)], a_strides)
+        a_pos = start + t * a_strides[reduce_dim]
+        if t < reduce_dim_len:
+            cache[t] = a_storage[a_pos]
+        cuda.syncthreads()
+
+        # now we've loaded, e.g. an entire row, into cache
+        # we reduce it using the pattern in the simple sum.
+        s = 1
+        # when stride 1, we execute on multiples of 2
+        # when stride 2, we execute on multiples of 4, 4 -> 8, etc.
+        # 0 needs to accumulate from the last element (if rdl odd)
+        # or the next to last element (if rdl even), hence we go
+        # as long s < reduce_dim_len
+        while s < reduce_dim_len:
+            if t % (2 * s) == 0 and t + s < reduce_dim_len:
+                cache[t] = fn(cache[t], cache[t + s])
+            # wait to do the next iteration of striding until
+            # all threads are done with this one.
+            cuda.syncthreads()
+            s = s * 2
+
+        # finally, copy the output to the appropriate position
+        # in the output array.
+
+        # out_index[reduce_dim] = cuda.blockIdx.x
+        # out_pos = index_to_position(out_index[: len(out_shape)], out_strides)
+        # out[out_pos] = fn(start, cache[0])
+        out[out_pos] = cache[0]
+        # if cuda.blockIdx.x == 0 and t == 0:
+        # print("end")
+        # print(out_index[0], out_index[1], out_index[2])
+        # print(out_pos)
+        # print(cache[0])
 
     return cuda.jit()(_reduce)  # type: ignore
 

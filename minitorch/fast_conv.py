@@ -8,6 +8,7 @@ from .tensor import Tensor
 from .tensor_data import (
     MAX_DIMS,
     Index,
+    Storage,
     Shape,
     Strides,
     broadcast_index,
@@ -25,14 +26,14 @@ broadcast_index = njit(inline="always")(broadcast_index)
 
 
 def _tensor_conv1d(
-    out: Tensor,
+    out: Storage,
     out_shape: Shape,
     out_strides: Strides,
     out_size: int,
-    input: Tensor,
+    input: Storage,
     input_shape: Shape,
     input_strides: Strides,
-    weight: Tensor,
+    weight: Storage,
     weight_shape: Shape,
     weight_strides: Strides,
     reverse: bool,

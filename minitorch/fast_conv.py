@@ -80,12 +80,26 @@ def _tensor_conv1d(
     )
     s1 = input_strides
     s2 = weight_strides
+    s3 = out_strides
 
-    # TODO: Implement for Task 4.1.
-    raise NotImplementedError("Need to implement for Task 4.1")
+    # for each batch
+    # out[b,o,j] = in(b,i,j+k) * w(o,i,k)
+    for b in prange(batch):
+        for o in prange(out_channels):
+            for j in prange(out_width):
+                out_pos = b * s3[0] + o * s3[1] + j * s3[2]
+                out[out_pos] = 0.0
+                for i in prange(in_channels):
+                    for k in prange(kw):
+                        last_idx = (j + k - (kw - 1)) if reverse else j + k
+                        if 0 <= last_idx and last_idx < width:
+                            in_pos = b * s1[0] + i * s1[1] + last_idx * s1[2]
+                            w_pos = o * s2[0] + i * s2[1] + k * s2[2]
+                            out[out_pos] += input[in_pos] * weight[w_pos]
 
 
 tensor_conv1d = njit(parallel=True)(_tensor_conv1d)
+# tensor_conv1d = _tensor_conv1d
 
 
 class Conv1dFun(Function):

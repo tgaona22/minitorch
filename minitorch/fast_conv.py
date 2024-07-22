@@ -205,7 +205,7 @@ def _tensor_conv2d(
         weight_strides (Strides): strides for `input` tensor.
         reverse (bool): anchor weight at top-left or bottom-right
     """
-    batch_, out_channels, _, _ = out_shape
+    batch_, out_channels, out_height, out_width = out_shape
     batch, in_channels, height, width = input_shape
     out_channels_, in_channels_, kh, kw = weight_shape
 
@@ -217,12 +217,44 @@ def _tensor_conv2d(
 
     s1 = input_strides
     s2 = weight_strides
+    s3 = out_strides
     # inners
     s10, s11, s12, s13 = s1[0], s1[1], s1[2], s1[3]
     s20, s21, s22, s23 = s2[0], s2[1], s2[2], s2[3]
+    s30, s31, s32, s33 = s3[0], s3[1], s3[2], s3[3]
 
-    # TODO: Implement for Task 4.2.
-    raise NotImplementedError("Need to implement for Task 4.2")
+    for b in prange(batch):
+        for o in range(out_channels):
+            for oh in range(out_height):
+                for ow in range(out_width):
+                    out_pos = b * s30 + o * s31 + oh * s32 + ow * s33
+                    out[out_pos] = 0.0
+                    for i in range(in_channels):
+                        for h in range(kh):
+                            in_h = (oh + h - (kh - 1)) if reverse else oh + h
+                            if 0 <= in_h and in_h < height:
+                                for w in range(kw):
+                                    in_w = (
+                                        (ow + w - (kw - 1))
+                                        if reverse
+                                        else ow + w
+                                    )
+                                    if 0 <= in_w and in_w < width:
+                                        in_pos = (
+                                            b * s10
+                                            + i * s11
+                                            + in_h * s12
+                                            + in_w * s13
+                                        )
+                                        w_pos = (
+                                            o * s20
+                                            + i * s21
+                                            + h * s22
+                                            + w * s23
+                                        )
+                                        out[out_pos] += (
+                                            input[in_pos] * weight[w_pos]
+                                        )
 
 
 tensor_conv2d = njit(parallel=True, fastmath=True)(_tensor_conv2d)

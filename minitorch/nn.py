@@ -23,8 +23,34 @@ def tile(input: Tensor, kernel: Tuple[int, int]) -> Tuple[Tensor, int, int]:
     kh, kw = kernel
     assert height % kh == 0
     assert width % kw == 0
-    # TODO: Implement for Task 4.3.
-    raise NotImplementedError("Need to implement for Task 4.3")
+    new_h = height // kh
+    new_w = width // kw
+
+    if not input._tensor.is_contiguous():
+        temp = input.contiguous()
+    else:
+        temp = input
+    reshaped = temp.view(batch, channel, new_h, kh, new_w, kw)
+    transposed = reshaped.permute(0, 1, 2, 4, 3, 5).contiguous()
+    new_tensor = transposed.view(batch, channel, new_h, new_w, kh * kw)
+    # problem with the approach in block quotes below is that
+    # when you run backprop through this function, the gradients
+    # that ought to accumulate to input instead accumulate to this
+    # internal variable new_tensor, which the caller doesn't have access to.
+    """
+    new_tensor = input.zeros((batch, channel, new_h, new_w, kh * kw))
+    new_tensor.requires_grad_(True)
+    for b in range(batch):
+        for c in range(channel):
+            for nh in range(new_h):
+                for nw in range(new_w):
+                    for n in range(kh * kw):
+                        row = nh * kh + (n // kw)
+                        col = nw * kw + (n % kw)
+                        new_tensor[b, c, nh, nw, n] = input[b, c, row, col]
+    """
+
+    return new_tensor, new_h, new_w
 
 
 def avgpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
@@ -39,8 +65,10 @@ def avgpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
         Pooled tensor
     """
     batch, channel, height, width = input.shape
-    # TODO: Implement for Task 4.3.
-    raise NotImplementedError("Need to implement for Task 4.3")
+    tiled, new_h, new_w = tile(input, kernel)
+    pooled = tiled.sum(4) / tiled.shape[4]
+    pooled = pooled.view(batch, channel, new_h, new_w)
+    return pooled
 
 
 max_reduce = FastOps.reduce(operators.max, -1e9)

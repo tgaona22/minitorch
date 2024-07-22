@@ -268,7 +268,7 @@ def tensor_map(
         in_strides: Strides,
     ) -> None:
         # simple version
-        if np.all(out_shape == in_shape):
+        if np.array_equal(out_shape, in_shape):
             # loop over the indices for the in tensor.
             in_idx = np.zeros(len(in_shape), dtype=np.int32)
             for i in range(len(in_storage)):
@@ -336,7 +336,7 @@ def tensor_zip(fn: Callable[[float, float], float]) -> Callable[
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
-        if np.all(a_shape == b_shape):
+        if np.array_equal(a_shape, b_shape):
             # simple, loop over indices in the a/b/out tensors
             idx = np.zeros(len(out_shape), dtype=np.int32)
             for i in range(len(out)):

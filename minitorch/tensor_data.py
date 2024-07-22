@@ -9,6 +9,8 @@ import numpy.typing as npt
 from numpy import array, float64
 from typing_extensions import TypeAlias
 
+from numba import cuda
+
 from .operators import prod
 
 MAX_DIMS = 32
@@ -43,7 +45,10 @@ def index_to_position(index: Index, strides: Strides) -> int:
         Position in storage
     """
 
-    return np.sum(index * strides)
+    x = 0
+    for i in range(len(index)):
+        x = x + index[i] * strides[i]
+    return x
 
 
 def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
@@ -84,12 +89,33 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
     # Hence 9 -> 111. Likewise, 8 / 6 = 1 remainder 2,
     # 2 / 2 = 1 remainder 0, and 0 / 1 = 0.
 
-    x = np.zeros(len(shape))
-    for i in range(len(x)):
-        x[i] = np.prod(shape[i + 1 :])
-    for i in range(len(out_index)):
-        out_index[i] = ordinal // x[i]
-        ordinal = ordinal % x[i]
+    """
+        x = np.zeros(len(shape))
+        o = np.zeros(len(shape))
+        o[0] = ordinal
+        for i in range(len(x)):
+            x[i] = np.prod(shape[i + 1 :])
+            if i == 0:
+                o[0] = ordinal
+            else:
+                o[i] = o[i - 1] % x[i]
+        for i in range(len(out_index)):
+            out_index[i] = o[i] // x[i]
+    """
+
+    n = len(shape)
+    # cannot allocate memory inside a cuda device function
+    # x = np.zeros(n, dtype=np.int32)
+    prod = 1
+    for i in range(n - 1, 0, -1):
+        prod *= shape[i]
+    for i in range(n):
+        if i == 0:
+            out_index[i] = ordinal // prod % shape[i]
+        else:
+            out_index[i] = (ordinal // prod) % shape[i]
+        if i < n - 1:
+            prod = prod / shape[i + 1]
 
 
 def broadcast_index(
@@ -217,8 +243,8 @@ class TensorData:
         assert len(self._storage) == self.size
 
     def to_cuda_(self) -> None:  # pragma: no cover
-        if not numba.cuda.is_cuda_array(self._storage):
-            self._storage = numba.cuda.to_device(self._storage)
+        # if not numba.cuda.is_cuda_array(self._storage):
+        self._storage = numba.cuda.to_device(self._storage)
 
     def is_contiguous(self) -> bool:
         """

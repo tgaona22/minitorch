@@ -109,6 +109,9 @@ class CudaOps(TensorOps):
         assert a.shape[-1] == b.shape[-2]
         out = a.zeros(tuple(ls))
 
+        # TESTING ONLY
+        # THREADS_PER_BLOCK = 2
+
         # One block per batch, extra rows, extra col
         blockspergrid = (
             (out.shape[1] + (THREADS_PER_BLOCK - 1)) // THREADS_PER_BLOCK,
@@ -475,6 +478,8 @@ def _tensor_matrix_multiply(
     batch = cuda.blockIdx.z
 
     BLOCK_DIM = 32
+    # TESTING ONLY
+    # BLOCK_DIM = 2
     a_shared = cuda.shared.array((BLOCK_DIM, BLOCK_DIM), numba.float64)
     b_shared = cuda.shared.array((BLOCK_DIM, BLOCK_DIM), numba.float64)
 
@@ -486,13 +491,46 @@ def _tensor_matrix_multiply(
     pi = cuda.threadIdx.x
     pj = cuda.threadIdx.y
 
-    # Code Plan:
-    # 1) Move across shared dimension by block dim.
-    #    a) Copy into shared memory for a matrix.
-    #    b) Copy into shared memory for b matrix
-    #    c) Compute the dot produce for position c[i, j]
-    # TODO: Implement for Task 3.4.
-    raise NotImplementedError("Need to implement for Task 3.4")
+    lim = (a_shape[2] + BLOCK_DIM - 1) // BLOCK_DIM
+    K = 0
+    dot = 0.0
+    while K < lim:
+        # the batch is determined by blockIdx.z for each block
+        # read in a and b to shared memory along the batch dimension
+        if i < a_shape[1] and (pj + K * BLOCK_DIM) < a_shape[2]:
+            a_pos = (
+                a_batch_stride * batch
+                + a_strides[1] * i
+                + a_strides[2] * (pj + K * BLOCK_DIM)
+            )
+            a_shared[pi, pj] = a_storage[a_pos]
+        else:
+            a_shared[pi, pj] = 0
+        if (pi + K * BLOCK_DIM) < b_shape[1] and j < b_shape[2]:
+            b_pos = (
+                b_batch_stride * batch
+                + b_strides[1] * (pi + K * BLOCK_DIM)
+                + b_strides[2] * j
+            )
+            b_shared[pi, pj] = b_storage[b_pos]
+        else:
+            b_shared[pi, pj] = 0
+        cuda.syncthreads()
+        # compute the dot product
+        for k in range(BLOCK_DIM):
+            if (k + K * BLOCK_DIM) < a_shape[2]:
+                dot += a_shared[pi, k] * b_shared[k, pj]
+        cuda.syncthreads()
+        print(i, j, dot)
+
+        K = K + 1
+    cuda.syncthreads()
+
+    if i < a_shape[1] and j < b_shape[2]:
+        out_pos = (
+            batch * out_strides[0] + i * out_strides[1] + j * out_strides[2]
+        )
+        out[out_pos] = dot
 
 
 tensor_matrix_multiply = cuda.jit(_tensor_matrix_multiply)

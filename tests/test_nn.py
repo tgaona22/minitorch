@@ -7,6 +7,8 @@ from minitorch import Tensor
 from .strategies import assert_close
 from .tensor_strategies import tensors
 
+from minitorch.nn import max as nnmax
+
 
 @pytest.mark.task4_3
 @given(tensors(shape=(1, 1, 4, 4)))
@@ -34,8 +36,24 @@ def test_avg(t: Tensor) -> None:
 @pytest.mark.task4_4
 @given(tensors(shape=(2, 3, 4)))
 def test_max(t: Tensor) -> None:
-    # TODO: Implement for Task 4.4.
-    raise NotImplementedError("Need to implement for Task 4.4")
+    dim = 0
+    true_max = t.to_numpy().max(dim)
+    t_max = nnmax(t, dim)
+    for i in range(t.shape[1]):
+        for j in range(t.shape[2]):
+            assert_close(true_max[i, j], t_max[0, i, j])
+
+    t = minitorch.tensor([[1, 4, 3, 2], [2, 3, 4, 1]])
+    t_max = nnmax(t, 0)
+    assert t_max[0, 0] == 2
+    assert t_max[0, 1] == 4
+    assert t_max[0, 2] == 4
+    assert t_max[0, 3] == 2
+    t_max = nnmax(t, 1)
+    assert t_max[0, 0] == 4
+    assert t_max[1, 0] == 4
+    minitorch.grad_check(lambda t: nnmax(t, 0), t)
+    minitorch.grad_check(lambda t: nnmax(t, 1), t)
 
 
 @pytest.mark.task4_4
